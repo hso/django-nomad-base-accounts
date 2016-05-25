@@ -201,8 +201,7 @@ class PostLoginRedirectView(SuccessMessageMixin, View):
         success_url = getattr(settings,
                               'BASE_ACCOUNTS_POST_LOGIN_REDIRECT_URL',
                               settings.LOGIN_REDIRECT_URL)
-        self.success_url = resolve_url(success_url)
-        return super(PostLoginRedirectView, self).get_success_url()
+        return resolve_url(success_url)
 
     def dispatch(self, request, *args, **kwargs):
         """Override post-login url if provided"""
@@ -219,8 +218,7 @@ class LogoutView(View):
         success_url = getattr(settings,
                               'BASE_ACCOUNTS_LOGOUT_REDIRECT_URL',
                               '/')
-        self.success_url = resolve_url(success_url)
-        return super(LogoutView, self).get_success_url()
+        return resolve_url(success_url)
 
     def dispatch(self, request, *args, **kwargs):
         list(messages.get_messages(request))  # Get rid of messages
