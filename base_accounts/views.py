@@ -209,7 +209,7 @@ class PostLoginRedirectView(SuccessMessageMixin, View):
         if self.request.GET.get('next'):
             self.success_url = self.request.GET.get('next')
         messages.success(self.request, self.success_message)
-        return redirect(self.success_url)
+        return redirect(self.get_success_url())
 
 
 class LogoutView(View):
@@ -229,7 +229,7 @@ class LogoutView(View):
             user.first_login = False
             user.save(update_fields=['first_login'])
         logout(request)
-        return redirect(self.success_url)
+        return redirect(self.get_success_url())
 
 
 def confirm_email_address(request, token):
