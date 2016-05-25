@@ -10,7 +10,7 @@ from django.utils.timezone import now
 from django.conf import settings
 from django.http import Http404
 from django.core import signing
-from django.core.urlresolvers import reverse_lazy
+from django.core.urlresolvers import reverse
 from django.contrib.auth import get_user_model
 
 from base_accounts.forms import SignupForm, LoginForm, UpdateEmailForm, UpdatePasswordForm
@@ -124,15 +124,21 @@ class UpdateEmailFormView(SuccessMessageMixin, ErrorMessageRedirectMixin, FormVi
     """Updates user model with new provided email"""
     form_class = UpdateEmailForm
     template_name = 'base_accounts/update_email.html'
-    success_url = getattr(settings, 'BASE_ACCOUNTS_UPDATE_EMAIL_REDIRECT_URL', reverse_lazy('settings_update_email'))
-    error_url = getattr(settings, 'BASE_ACCOUNTS_UPDATE_EMAIL_ERROR_REDIRECT_URL', reverse_lazy('settings_update_email'))
     success_message = _('You have updated your email successfully')
 
     def get_success_url(self):
-        url_setting = getattr(settings,
-                              'BASE_ACCOUNTS_LOGIN_REDIRECT_URL',
-                              settings.LOGIN_REDIRECT_URL)
-        return resolve_url(url_setting)
+        success_url = getattr(settings,
+                              'BASE_ACCOUNTS_UPDATE_EMAIL_REDIRECT_URL',
+                              reverse('settings_update_email'))
+        self.success_url = resolve_url(success_url)
+        return super(UpdateEmailFormView, self).get_success_url()
+
+    def get_error_url(self):
+        error_url = getattr(settings,
+                            'BASE_ACCOUNTS_UPDATE_EMAIL_ERROR_REDIRECT_URL',
+                            reverse('settings_update_email'))
+        self.error_url = resolve_url(error_url)
+        return super(UpdateEmailFormView, self).get_error_url()
 
     def get_form_kwargs(self):
         """Form uses request to fetch current user"""
@@ -153,9 +159,21 @@ class UpdatePasswordFormView(SuccessMessageMixin, ErrorMessageRedirectMixin, For
     """Updates user model with new provided password"""
     form_class = UpdatePasswordForm
     template_name = 'base_accounts/update_password.html'
-    success_url = getattr(settings, 'BASE_ACCOUNTS_UPDATE_PASSWORD_REDIRECT_URL', reverse_lazy('settings_update_password'))
-    error_url = getattr(settings, 'BASE_ACCOUNTS_UPDATE_PASSWORD_ERROR_REDIRECT_URL', reverse_lazy('settings_update_password'))
     success_message = _('You have updated your password successfully')
+
+    def get_success_url(self):
+        success_url = getattr(settings,
+                              'BASE_ACCOUNTS_UPDATE_PASSWORD_REDIRECT_URL',
+                              reverse('settings_update_password'))
+        self.success_url = resolve_url(success_url)
+        return super(UpdatePasswordFormView, self).get_success_url()
+
+    def get_error_url(self):
+        error_url = getattr(settings,
+                            'BASE_ACCOUNTS_UPDATE_PASSWORD_ERROR_REDIRECT_URL',
+                            reverse('settings_update_password'))
+        self.error_url = resolve_url(error_url)
+        return super(UpdatePasswordFormView, self).get_error_url()
 
     def get_form_kwargs(self):
         """Form uses request to fetch current user"""
