@@ -9,7 +9,7 @@ class SignupFormMixin(object):
 
     def clean_email(self, *args, **kwargs):
         data = self.cleaned_data['email']
-        if self.clean_email_user_model:
+        if getattr(self, 'clean_email_user_model', None):
             model = self.clean_email_user_model
         else:
             model = self.user_model
