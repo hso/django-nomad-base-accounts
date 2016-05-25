@@ -195,8 +195,14 @@ class UpdatePasswordFormView(SuccessMessageMixin, ErrorMessageRedirectMixin, For
 
 class PostLoginRedirectView(SuccessMessageMixin, View):
     """Used by social login flows (e.g. OAuth)"""
-    success_url = getattr(settings, 'BASE_ACCOUNTS_POST_LOGIN_REDIRECT_URL', settings.LOGIN_REDIRECT_URL)
     success_message = _("You have logged in")
+
+    def get_success_url(self):
+        success_url = getattr(settings,
+                              'BASE_ACCOUNTS_POST_LOGIN_REDIRECT_URL',
+                              settings.LOGIN_REDIRECT_URL)
+        self.success_url = resolve_url(success_url)
+        return super(PostLoginRedirectView, self).get_success_url()
 
     def dispatch(self, request, *args, **kwargs):
         """Override post-login url if provided"""
@@ -208,7 +214,13 @@ class PostLoginRedirectView(SuccessMessageMixin, View):
 
 class LogoutView(View):
     """Updates User.first_login field before logout"""
-    success_url = getattr(settings, 'BASE_ACCOUNTS_LOGOUT_REDIRECT_URL', '/')
+
+    def get_success_url(self):
+        success_url = getattr(settings,
+                              'BASE_ACCOUNTS_LOGOUT_REDIRECT_URL',
+                              '/')
+        self.success_url = resolve_url(success_url)
+        return super(LogoutView, self).get_success_url()
 
     def dispatch(self, request, *args, **kwargs):
         list(messages.get_messages(request))  # Get rid of messages
