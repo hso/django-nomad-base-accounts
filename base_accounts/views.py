@@ -2,7 +2,9 @@
 
 from django.views.generic import View, FormView
 from django.contrib.auth import login, logout
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect
+from django.shortcuts import resolve_url
 from django.utils.translation import ugettext as _
 from django.utils.timezone import now
 from django.conf import settings
@@ -40,13 +42,18 @@ except:
 class ErrorMessageRedirectMixin(object):
     """Redirect to error url or next param if exists, converting form error strs to sys msgs"""
 
-    def form_invalid(self, form):
+    def get_error_url(self):
         error_url = None
 
         if getattr(self, 'error_url', None):  # Error URL from object property
             error_url = redirect(self.error_url)
         elif self.request.POST.get('next'):  # Error URL contains a next param
-            error_url = redirect("%s?next=%s" % (reverse_lazy('login'), self.request.POST.get('next')))
+            error_url = redirect("%s?next=%s" % (reverse_lazy('login'),
+                                                 self.request.POST.get('next')))
+        return error_url
+
+    def form_invalid(self, form):
+        error_url = self.get_error_url()
 
         # If error url, convert form errors to sys msgs and redirect
         if error_url:
@@ -74,8 +81,14 @@ class NextRedirectMixin(object):
 class SignupFormView(SuccessMessageMixin, NextRedirectMixin, FormView):
     form_class = SignupForm
     template_name = 'base_accounts/signup.html'
-    success_url = getattr(settings, 'BASE_ACCOUNTS_SIGNUP_REDIRECT_URL', settings.LOGIN_REDIRECT_URL)
     success_message = _("Welcome!")
+
+    def get_success_url(self):
+        success_url = getattr(settings,
+                              'BASE_ACCOUNTS_SIGNUP_REDIRECT_URL',
+                              settings.LOGIN_REDIRECT_URL)
+        self.success_url = resolve_url(success_url)
+        return super(SignupFormView, self).get_success_url()
 
     def get_form_kwargs(self):
         """Form uses request to signup"""
@@ -91,8 +104,14 @@ class SignupFormView(SuccessMessageMixin, NextRedirectMixin, FormView):
 class LoginFormView(SuccessMessageMixin, ErrorMessageRedirectMixin, NextRedirectMixin, FormView):
     form_class = LoginForm
     template_name = 'base_accounts/login.html'
-    success_url = getattr(settings, 'BASE_ACCOUNTS_LOGIN_REDIRECT_URL', settings.LOGIN_REDIRECT_URL)
     success_message = _("You have logged in")
+
+    def get_success_url(self):
+        success_url = getattr(settings,
+                              'BASE_ACCOUNTS_LOGIN_REDIRECT_URL',
+                              settings.LOGIN_REDIRECT_URL)
+        self.success_url = resolve_url(success_url)
+        return super(LoginFormView, self).get_success_url()
 
     def get_form_kwargs(self):
         """Form uses request to login"""
@@ -108,6 +127,12 @@ class UpdateEmailFormView(SuccessMessageMixin, ErrorMessageRedirectMixin, FormVi
     success_url = getattr(settings, 'BASE_ACCOUNTS_UPDATE_EMAIL_REDIRECT_URL', reverse_lazy('settings_update_email'))
     error_url = getattr(settings, 'BASE_ACCOUNTS_UPDATE_EMAIL_ERROR_REDIRECT_URL', reverse_lazy('settings_update_email'))
     success_message = _('You have updated your email successfully')
+
+    def get_success_url(self):
+        url_setting = getattr(settings,
+                              'BASE_ACCOUNTS_LOGIN_REDIRECT_URL',
+                              settings.LOGIN_REDIRECT_URL)
+        return resolve_url(url_setting)
 
     def get_form_kwargs(self):
         """Form uses request to fetch current user"""
